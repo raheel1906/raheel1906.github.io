@@ -1,4 +1,4 @@
-# Azure Route propogation - What it Really Does and usecases to Disable the feature
+# Azure Route Propagation: Why It Broke ASE but Not App Service
 
 ## What we are trying to achieve
 We experianced an issue where traffic from our corporate network that was unable to reach a web application hosted on an App Service Environment that had privat endpoint, secured by a Network Security Group (NSG) and Site access rules had explicity allowed the ranges needed to access the frontend. 
