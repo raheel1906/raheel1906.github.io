@@ -18,7 +18,7 @@ Root cause turned out to be a small, but critical detail in the route table conf
 
 The route table is vended through subscription vending, and has **route propagation Disabled**, because the standard design is that all outbound traffic should be forced through the hub firewall using a default route (0.0.0.0/0 → Azure Firewall). Developers usually re-use this on their subnets.
 
-This works fine for 99% of the workloads in out environment, and there were several examples were similar setup was already working, for example for Workload A (app service).
+This works fine for 99% of the workloads in our environment, and there were several examples were similar setup was already working, for example for Workload A (app service).
 
 For Workload B (ASE), on-prem clients could not reach the web frontend until we enabled route propagation on the relevant subnet route table.
 
