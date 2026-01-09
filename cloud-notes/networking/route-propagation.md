@@ -47,5 +47,6 @@ Two spokes can be architecturally identical and still behave differently dependi
 Troubleshooting and understanding a technical issue alone can be overwhelming. To make it clear for yourself and others, you need to practice explaining the challenge at different technical levels. This can help the issue become clearer even for yourself. Bringing in a new set of eyes can positively impact the troubleshooting, and knowledge can be more easily shared.
 ## References
 https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-udr-overview
+https://learn.microsoft.com/en-us/azure/app-service/environment/networking
 https://learn.microsoft.com/en-us/answers/questions/1282209/propagated-gateway-routes
 https://learn.microsoft.com/en-us/answers/questions/1373116/propagate-gateway-routes-azure
