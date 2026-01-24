@@ -99,6 +99,6 @@ resource "azapi_resource" "subnet" {
 While azurerm is a stable and easier-to-use provider, there are definitely scenarios where one needs to evaluate a switch to the AzApi provider to ensure a compliant deployment of infrastructure in the Azure cloud environment.
 
 ## References
-https://www.hashicorp.com/en/blog/enhancing-azure-deployments-with-azurerm-and-azapi-terraform-providers
-https://github.com/hashicorp/terraform-provider-azurerm/issues/9022
-https://registry.terraform.io/modules/haflidif/alz-subnet/azurerm/latest
+- https://www.hashicorp.com/en/blog/enhancing-azure-deployments-with-azurerm-and-azapi-terraform-providers
+- https://github.com/hashicorp/terraform-provider-azurerm/issues/9022
+- https://registry.terraform.io/modules/haflidif/alz-subnet/azurerm/latest
