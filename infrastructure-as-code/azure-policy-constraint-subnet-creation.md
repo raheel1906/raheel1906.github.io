@@ -3,7 +3,7 @@
 ## What we are trying to achieve
 In our Azure cloud platform we use Azure policy to ensure that each subnet creation is forced to associate a route table and Network Security group upon creation.
 
-Creation of a subnet with route table and network security group association is a straightforward process if you have ever done so with infrastructure as code. In my experience with Terraform, you would typically look at something like this. I will assume a resource group and Virtual network already exists. 
+Creation of a subnet with route table and network security group association is a straightforward process if you have ever done so with infrastructure as code. In my experience with Terraform, you would typically look at something like this. I will assume a some base infra already exists, focus is on the resource blocks.
 
 ```hcl
 # Existing Resource Group
