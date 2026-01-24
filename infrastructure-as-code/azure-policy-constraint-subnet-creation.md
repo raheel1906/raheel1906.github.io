@@ -3,7 +3,7 @@
 ## What we are trying to achieve
 In our Azure cloud platform we use Azure policy to ensure that each subnet creation is forced to associate a route table and Network Security group upon creation.
 
-Creation of a subnet with route table and network security group association is a straightforward process if you have ever done so with infrastructure as code. In my experience with Terraform, you would typically look at something like this. I will assume a some base infra already exists, focus is on the resource blocks.
+Creation of a subnet with route table and network security group association is a straightforward process if you have ever done so with infrastructure as code. In my experience with Terraform, you would typically look at something like this. I will assume some base infra already exists, focus is on the resource blocks.
 
 ```hcl
 # Existing Resource Group
@@ -52,12 +52,12 @@ resource "azurerm_subnet_route_table_association" "route_association" {
 ```
 
 ## What I expected
-Having done this previously with a similar approach to the one above, I was expecting this to be a straight forward process. 
+Having done this previously with a similar approach to the one above, I was expecting this to be a straight forward process having the subnet deployed as soon as out CD workflow runs. 
 
 ## What actually happened
-Since we leverage CI/CD actions workflow, I observed a failed CD pipeline with an error code that basically explained that Azure Policy was complaining about the subnet creation being in conflict with the Azure policy that ensures route table and Network Security Group is associated with the subnet upon creation. 
+Since we leverage CI/CD actions workflow, I observed a failed CD pipeline with an error code that basically complained about Azure Policy conflict. The error was complaining about the subnet not having a route table and Network Security Group associated with it.
 
-So, in short, our platform guardrails were stopping me from creating the subnet even with the necessary associations. 
+So, in short, our platform guardrails were stopping me from creating the subnet even with the necessary associations defined in Terraform using the azurerm provider. 
 
 ## Why this happens
 After some digging, it became clearer that even though azurerm is the stable and well-tested layer on top of Azure APIs, there are definitely some scenarios where this is not a good fit.
@@ -70,7 +70,7 @@ My observations were that the azurerm provider does API calls in sequence, somet
 This is the core of the issue: Azure registers a subnet creation in itself without the conditions of the Azure Policy being met (route table and NSG association). 
 
 ## How we fixed it
-The approach was switched to leverage the AzApi provider. AzApi is a lightweight wrapper around Azure APIs, and operations can occur simultaneously compared to azurerm. The code that ended up landing me a subnet without making Azure policy angry is presented below.
+The approach was switched to leverage the AzApi provider. AzApi is a lightweight wrapper around Azure APIs, and my observations are that operations can occur simultaneously compared to azurerm. The code that ended up landing me a subnet without making Azure policy angry is presented below:
 
 ```hcl
 resource "azapi_resource" "subnet" {
