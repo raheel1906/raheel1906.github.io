@@ -46,7 +46,7 @@ Enabling route propagation on the ASE subnet’s route table allowed the subnet 
   Troubleshooting and understanding a technical issue alone can be overwhelming. To make it clear for yourself and others, you need to practice explaining the challenge at different technical levels. This can help the issue become clearer even for yourself. Bringing in a new set of eyes can positively impact the troubleshooting, and knowledge can be more easily shared.
 
 ## References
-- https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-udr-overview
-- https://learn.microsoft.com/en-us/azure/app-service/environment/networking
-- https://learn.microsoft.com/en-us/answers/questions/1282209/propagated-gateway-routes
-- https://learn.microsoft.com/en-us/answers/questions/1373116/propagate-gateway-routes-azure
+- [Virtual network traffic routing - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-udr-overview)
+- [App Service Environment networking - Microsoft Learn](https://learn.microsoft.com/en-us/azure/app-service/environment/networking)
+- [Propagated gateway routes - Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/1282209/propagated-gateway-routes)
+- [Propagate gateway routes Azure - Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/1373116/propagate-gateway-routes-azure)
