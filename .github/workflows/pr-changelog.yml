@@ -1,0 +1,74 @@
+name: "Ensure changelog is updated"
+on:
+  pull_request:
+    types:
+      - edited
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+
+permissions: # When the permissions key is used, all unspecified permissions are set to no access, with the exception of the metadata scope, which always gets read access.
+  id-token: write # https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#adding-permissions-settings
+  contents: write
+
+jobs:
+  changelog:
+    name: Check and update CHANGELOG.md
+    runs-on: ubuntu-latest
+    environment: changelog
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Check if only repo config is changed
+        id: check_platform_change
+        run: |
+          firstCommit='${{ github.event.pull_request.base.sha }}'
+          lastCommit='${{ github.event.pull_request.head.sha }}'
+          git diff --name-only --diff-filter=d "${firstCommit}~1" "${lastCommit}" | tee changedFiles.txt 2>&1
+          echo "Oldest commit: $firstCommit"
+          echo "Most recent commit: $lastCommit"
+          if cat changedFiles.txt | grep -E '(^.github/repos/)|(yaml_schemas/ref_topics.yaml)' -v;then
+              echo "Platform change detected"
+              echo "platform_change=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "No platform change detected"
+              echo "platform_change=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Ensure CHANGELOG.md is updated
+        if: ${{ steps.check_platform_change.outputs.platform_change == 'true' }}
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+          PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          PULL_REQUEST_LABELS: ${{ toJSON(github.event.pull_request.labels) }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          ACTOR_EMAIL="${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
+          ACTOR_FULLNAME=$(git log --author="$ACTOR_EMAIL" -1 --format=%an)
+          git config --global user.email "${ACTOR_EMAIL}"
+          git config --global user.name "${ACTOR_FULLNAME}"
+          if echo "$PULL_REQUEST_LABELS" | grep '"name": "ignore-for-changelog"' > /dev/null; then
+              echo "PR ignored for changelog requirement";
+              exit 0
+          fi
+          if cat CHANGELOG.md | grep "/pull/current" > /dev/null; then
+              echo "CHANGELOG.md is ready to set PR number";
+              SED_SAFE_BASE_URL=$(echo ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} | sed 's/\//\\\//g' | sed 's/.mcas.ms//')
+              cat CHANGELOG.md | sed "s/\/pull\/current/@${PR_AUTHOR} ${SED_SAFE_BASE_URL}\/pull\/${PULL_REQUEST_NUMBER}/" | tee CHANGELOG.md > /dev/null
+              git add CHANGELOG.md
+              git commit -m ":memo: docs: add PR and Author to CHANGELOG.md"
+              git push
+              exit 0
+          fi
+          REPO_URL=$(echo "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" | sed 's/.mcas.ms//')
+          if ! cat CHANGELOG.md | grep "${REPO_URL}/pull/${PULL_REQUEST_NUMBER}" > /dev/null; then
+              echo "No info in CHANGELOG.md about PR number ${PULL_REQUEST_NUMBER} for ${GITHUB_REPOSITORY}, and PR is not ignored for changelog requirement";
+              exit 1
+          fi
+          echo "CHANGELOG.md contains info about PR number ${PULL_REQUEST_NUMBER}, all OK";
