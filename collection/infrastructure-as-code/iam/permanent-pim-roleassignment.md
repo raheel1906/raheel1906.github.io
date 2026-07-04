@@ -17,6 +17,13 @@ While improving our security posture, we were switching from permanent normal ro
 
 ## Understanding the components
 
+### PIM for Azure Resources Vs. Entra Roles
+PIM can be enabled for Entra Roles such as Global administrator, Security Reader etc. and the scope is tenant-wide.
+
+But PIM can also be enabled for Azure resources that handles Azure RBAC roles such as Owner, contributer etc. and the scope can be set to RG, subscription or Management group level.
+
+My scenario covers Pim eligibility for Azure Resources.
+
 ### Active vs. Eligible
 
 An active assignment means the user has the role right now and can use it without any activation step. This is what a normal `azurerm_role_assignment` grants, and also what `azurerm_pim_active_role_assignment` gives but under PIM governance.
@@ -27,11 +34,22 @@ An eligible assignment means the user is allowed to hold the role but does not h
 A crucial component to understand is the Role Management Policy, this ruleset governs how an eligible assignment or activation behaves - Like azure policy, but spesifically for this. This policy handles multiple controls, one of which **elgibility expiration**. This is set at RG, Subscription or Management group level and covers all assignments under the respective scope.
 
 ## Key observations
-- Mention Provider version constraint
-- Mention without role management policy you will hit the existing role management constraint, for my usecase it was 365 days
-- Azure resources and not entra ID
+### Provider version in lock file
+We had a lot of back and forth with the `azurerm_pim_eligible_role_assignment` because of an older version for azurerm in out lock file, in that version this resource block did not have all arguments supported. More spesifically the schedule block (even tough we ended up removing that after solving the underlying issue). Upgrading our lock file azurerm section to latest solved this issue fairly quick.
+
+### Existing Management policy on set scope
+Before editing, check the management policy already set at your target scope. Worth noting, you are not able to view this in the Entra ID portal, ref. [Microsoft QA](https://learn.microsoft.com/en-us/answers/questions/1295936/where-can-i-find-role-management-policies). A policy applied at a higher scope, like the subscription, is inherited by every resource group beneath it; it isn't scoped to just the one resource you're editing. That inheritance might make you wonder whether a permanent eligible assignment weakens protection further down. It doesn't: permanent eligibility only changes how long a principal is allowed to stay eligible, not what happens at activation — MFA, approval, and any narrower policy set at a lower scope still apply. What changes is who's responsible for cleaning up stale eligibilities, not which controls fire.
+
+### Dependencies
+Terraform's apply order comes from resource attribute references, and here the two resources don't reference each other — they each just take scope and role_definition_id as separate input variables. Without an explicit dependency, Terraform is free to create the azurerm_pim_eligible_role_assignment before the azurerm_role_management_policy update has landed, which means the assignment gets created under whatever policy is already active on that scope. If that policy still requires an expiration, the apply fails on the same 365-day constraint from the introduction. Add depends_on = [azurerm_role_management_policy.management_policy] to the role assignment resource block so the policy is guaranteed to apply first.
 
 ## Terraform automation
+Under is an example of how to create:
+- Entra ID group
+- Management policy with no expiration
+- PIM Eligible Role assignment with no expiration
+
+### Group creation
 ```hcl
 # Group creation
 resource "azuread_group" "group" {
@@ -39,8 +57,9 @@ resource "azuread_group" "group" {
   owners           = var.owners
   security_enabled = true
 }
-
-# Management Policy creation
+```
+### Management policy creation with no expiration for PIM role assignments
+```hcl
 resource "azurerm_role_management_policy" "management_policy" {
   scope              = var.subscription_id
   role_definition_id = var.role_definition_id
@@ -49,13 +68,18 @@ resource "azurerm_role_management_policy" "management_policy" {
     expiration_required = false # Ensures expiration is not required in role assignment
   }
 }
-
-# Role assignement creation
+```
+### PIM eligible Role assignment creation without expiration
+```hcl
 resource "azurerm_pim_eligible_role_assignment" "pim_role_assignment" {
   scope              = var.subscription_id
   role_definition_id = var.role_definition_id
   principal_id       = var.principal_id
   depends_on         = [azurerm_role_management_policy.management_policy] # ensures assignement is compliant with new management policy
 }
-
 ```
+
+## conclusion
+If I did this again, I would understand and check the existing role management policy before touching anything. This is the most crucial part of the setup and requires a good understanding of the backend governance that is not visible in the Entra ID portal.
+
+That upfront effort only pays off if you're repeating it: I'd recommend this approach to any team managing role assignments at scale, but not necessarily for a single role assignment — such a setup would be overkill.
