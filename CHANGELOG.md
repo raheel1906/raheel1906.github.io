@@ -9,6 +9,8 @@
 - Fixed GitHub Pages deploy workflow: restored required `environment` block and removed the conflicting auto-generated `jekyll-gh-pages.yml`
 - Added `collection/index.md` as the site homepage, fixing a 404 on the site root
 - @raheel1906 https://github.com/raheel1906/raheel1906.github.io/pull/6
+- Added site link to README.md
+- /pull/current
 
 ## 03.07.2026
 - Added .github and nested workflow folder
