@@ -24,6 +24,8 @@ But PIM can also be enabled for Azure resources that handle Azure RBAC roles suc
 
 My scenario covers PIM eligibility for Azure resources.
 
+![PIM overview](../../../img/pim-overview.png)
+
 ### Active vs. Eligible
 
 An active assignment means the user has the role right now and can use it without any activation step. This is what a normal `azurerm_role_assignment` grants, and also what `azurerm_pim_active_role_assignment` gives but under PIM governance.
@@ -79,6 +81,11 @@ resource "azurerm_pim_eligible_role_assignment" "pim_role_assignment" {
   depends_on         = [azurerm_role_management_policy.management_policy] # ensures assignment is compliant with new management policy
 }
 ```
+
+### IAM overview in portal
+Below is a side-by-side representation of how this looks like in the azure portal under IAM.
+![IAM overview](../../../img/iam-overview-permanent-pim.png)
+
 
 ## Conclusion
 If I did this again, I would understand and check the existing role management policy before touching anything. This is the most crucial part of the setup and requires a good understanding of the backend governance that is not visible in the Entra ID portal.
